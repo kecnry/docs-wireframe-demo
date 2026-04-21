@@ -229,7 +229,7 @@ def copy_wireframe_assets(app, exception):
     # wireframe-base.html: copy with all wireframe_variables substituted so the
     # index page fetch gets fully-rendered HTML (no remaining {{ ... }} placeholders)
     base_html = _load_asset('wireframe-base.html', assets_dir)
-    variables = app.config.wireframe_variables or {}
+    variables = dict(app.config.wireframe_variables or {})
     base_html = _apply_variables(base_html, variables)
     with open(os.path.join(static_dir, 'wireframe-base.html'), 'w', encoding='utf-8') as f:
         f.write(base_html)
