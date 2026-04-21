@@ -1,0 +1,40 @@
+/*
+ * wireframe-demo-controls.css
+ *
+ * Styles that must live in the main document (outside Shadow DOM)
+ * because they target elements inside the consumer's HTML.
+ *
+ * The play/pause/restart button styles are inside the Shadow DOM
+ * (see wireframe-demo-controller.js).
+ */
+
+/* ── Container base ──────────────────────────────────────────────── */
+
+[data-wireframe-demo] {
+    position: relative;
+    overflow: hidden;
+}
+
+/* ── Highlight animation applied to targeted elements ────────────── */
+
+@keyframes wfd-highlight-pulse {
+    0%   { box-shadow: 0 0 0 0 rgba(255, 152, 0, 0.6); }
+    70%  { box-shadow: 0 0 0 8px rgba(255, 152, 0, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 152, 0, 0); }
+}
+
+.wfd-highlight {
+    animation: wfd-highlight-pulse 0.8s ease-out;
+    outline: 2px solid rgba(255, 152, 0, 0.7);
+    outline-offset: 2px;
+    border-radius: 2px;
+}
+
+/* ── Controls host positioning ───────────────────────────────────── */
+
+.wfd-controls-host {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    z-index: 10000;
+}

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  /* Self-contained example wireframe styles */
+  .example-app {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #1e1e2e;
+    color: #cdd6f4;
+    min-height: 260px;
+    display: flex;
+    flex-direction: column;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .example-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: #181825;
+    border-bottom: 1px solid #313244;
+  }
+  .example-toolbar button {
+    background: #313244;
+    color: #cdd6f4;
+    border: 1px solid #45475a;
+    border-radius: 6px;
+    padding: 6px 14px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .example-toolbar button:hover,
+  .example-toolbar button.active {
+    background: #45475a;
+    border-color: #585b70;
+  }
+  .example-toolbar button.active {
+    border-color: #f9e2af;
+    color: #f9e2af;
+  }
+  .example-body {
+    display: flex;
+    flex: 1;
+  }
+  .example-panel {
+    width: 0;
+    overflow: hidden;
+    background: #11111b;
+    border-right: 1px solid #313244;
+    transition: width 0.3s ease;
+    flex-shrink: 0;
+  }
+  .example-panel.open {
+    width: 200px;
+    padding: 12px;
+  }
+  .example-panel h3 {
+    margin: 0 0 8px;
+    font-size: 13px;
+    color: #a6adc8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .example-panel .field {
+    margin-bottom: 10px;
+  }
+  .example-panel label {
+    display: block;
+    font-size: 12px;
+    color: #6c7086;
+    margin-bottom: 3px;
+  }
+  .example-panel input {
+    width: 100%;
+    box-sizing: border-box;
+    background: #1e1e2e;
+    border: 1px solid #313244;
+    color: #cdd6f4;
+    border-radius: 4px;
+    padding: 5px 8px;
+    font-size: 13px;
+  }
+  .example-content {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .example-content .placeholder {
+    text-align: center;
+    color: #585b70;
+    font-size: 14px;
+  }
+</style>
+</head>
+<body>
+<div class="example-app">
+  <div class="example-toolbar">
+    <button id="demo-btn-1">Open Panel</button>
+    <button id="demo-btn-2">Action</button>
+  </div>
+  <div class="example-body">
+    <div class="example-panel" id="demo-panel">
+      <h3>Settings</h3>
+      <div class="field">
+        <label>Search</label>
+        <input type="text" id="demo-input" placeholder="Type here…" />
+      </div>
+    </div>
+    <div class="example-content">
+      <div class="placeholder">Wireframe content area</div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
