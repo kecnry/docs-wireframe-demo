@@ -833,6 +833,11 @@ function initializeWireframeEngine(container) {
         icon.addEventListener('click', function(e) {
             if (e.isTrusted) stopAutoCycle();
 
+            if (icon.classList.contains('api-button')) {
+                icon.classList.toggle('active');
+                return;
+            }
+
             if (icon.classList.contains('mouseover-button')) {
                 var scrollTarget = icon.dataset.scrollTarget;
                 var targetEl = scrollTarget ? document.querySelector('[data-grid-id="' + scrollTarget + '"]') : null;
