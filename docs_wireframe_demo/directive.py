@@ -213,10 +213,29 @@ def copy_wireframe_assets(app, exception):
     import os
     assets_dir = app.config.wireframe_assets_dir
 
-    # api.svg is copied verbatim
     static_dir = os.path.join(app.outdir, '_static')
+
+    # api.svg is copied verbatim
     for filename in ['api.svg']:
         dst_bytes = _load_asset_bytes(filename, assets_dir)
         with open(os.path.join(static_dir, filename), 'wb') as f:
             f.write(dst_bytes)
+
+    # wireframe-demo.css: copy from assets_dir (jdaviz override) or package default
+    css_content = _load_asset('wireframe-demo.css', assets_dir)
+    with open(os.path.join(static_dir, 'wireframe-demo.css'), 'w', encoding='utf-8') as f:
+        f.write(css_content)
+
+    # wireframe-base.html: copy with all wireframe_variables substituted so the
+    # index page fetch gets fully-rendered HTML (no remaining {{ ... }} placeholders)
+    base_html = _load_asset('wireframe-base.html', assets_dir)
+    variables = app.config.wireframe_variables or {}
+    base_html = _apply_variables(base_html, variables)
+    with open(os.path.join(static_dir, 'wireframe-base.html'), 'w', encoding='utf-8') as f:
+        f.write(base_html)
+
+    # wireframe-engine.js: always from the package bundle (never overridden by jdaviz)
+    engine_js = _load_engine_js()
+    with open(os.path.join(static_dir, 'wireframe-engine.js'), 'w', encoding='utf-8') as f:
+        f.write(engine_js)
 
