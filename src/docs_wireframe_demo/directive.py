@@ -61,6 +61,8 @@ class WireframeDemoDirective(SphinxDirective):
         'id': str,
         'height': str,
         'initial-class': str,
+        'cursor': str,
+        'cursor-speed': str,
     }
 
     def run(self):
@@ -107,6 +109,17 @@ class WireframeDemoDirective(SphinxDirective):
             val = self.options.get(opt)
             if val is not None:
                 config[key] = val.strip().lower() == 'true'
+
+        # Cursor
+        cursor_val = self.options.get('cursor')
+        if cursor_val is not None:
+            config['cursor'] = cursor_val.strip().lower() == 'true'
+        cursor_speed = self.options.get('cursor-speed')
+        if cursor_speed is not None:
+            try:
+                config['cursorSpeed'] = int(cursor_speed)
+            except ValueError:
+                pass
 
         # Container id
         container_id = self.options.get(

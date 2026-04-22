@@ -258,7 +258,7 @@
             repeat: true,
             autoStart: true,
             pauseOnInteraction: true,
-            cursor: false,
+            cursor: true,
             cursorSpeed: 300,
             onStepStart: null,
             onStepEnd: null,

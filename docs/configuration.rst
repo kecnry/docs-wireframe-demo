@@ -37,9 +37,9 @@ When creating a ``WireframeDemo`` programmatically or via the
      - Pause the demo when the user clicks inside the container.
    * - ``cursor``
      - bool
-     - ``false``
+     - ``true``
      - Show an animated cursor that moves to each target element before the
-       action executes. Useful for GIF recordings.
+       action executes. Set to ``false`` to disable.
    * - ``cursorSpeed``
      - number
      - ``300``
