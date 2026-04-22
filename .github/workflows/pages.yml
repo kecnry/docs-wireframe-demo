@@ -27,23 +27,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Prepare site
-        run: |
-          mkdir -p _site
-          # Copy examples
-          cp -r examples/* _site/
-          # Copy controller assets so examples can reference them
-          mkdir -p _site/assets
-          cp src/docs_wireframe_demo/static/wireframe-demo-controller.js _site/assets/
-          cp src/docs_wireframe_demo/static/wireframe-demo-controls.css _site/assets/
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
 
-      - name: Fix asset paths in examples
-        run: |
-          # Rewrite relative paths to the source tree → /assets/ for deployed site
-          find _site -name '*.html' -exec sed -i \
-            -e 's|../../src/docs_wireframe_demo/static/wireframe-demo-controller.js|/assets/wireframe-demo-controller.js|g' \
-            -e 's|../../src/docs_wireframe_demo/static/wireframe-demo-controls.css|/assets/wireframe-demo-controls.css|g' \
-            {} +
+      - name: Build self-contained demo pages
+        run: python examples/build.py --out _site
+
+      - name: Add index page
+        run: cp examples/index.html _site/index.html
 
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

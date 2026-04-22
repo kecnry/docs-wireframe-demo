@@ -9,6 +9,8 @@ build/
 
 docs/_build/
 
+_site/
+
 *.swp
 *.swo
 *~

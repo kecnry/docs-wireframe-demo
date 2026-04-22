@@ -1,180 +1,165 @@
 Embedding in Confluence
 =======================
 
-You can embed wireframe demos in Confluence pages using the HTML macro.
-The demo assets are served from GitHub Pages; only the HTML snippet
-lives in Confluence.
+Wireframe demos can be embedded in Confluence pages using the
+**built-in iframe macro** — no third-party apps or admin approval
+required.
 
-.. note::
-
-   Confluence Cloud's **built-in** HTML macro strips ``<script>`` tags.
-   You will need a third-party HTML app that supports full JavaScript,
-   such as `HTML for Confluence by Appfire <https://marketplace.atlassian.com/apps/12684/html-for-confluence>`_
-   or similar.  Confluence Data Center / Server's HTML macro works
-   natively.
+The approach works by building self-contained demo pages (wireframe
+HTML + controller JS + CSS + step config all inlined into a single file)
+and hosting them on GitHub Pages.  Confluence embeds each page via
+iframe.
 
 
-Prerequisites
--------------
+How it works
+------------
 
-Your project must publish its wireframe HTML files and the
-docs-wireframe-demo assets to a publicly accessible URL.  The
-recommended approach is **GitHub Pages** — the examples in this project
-are deployed automatically via the ``pages.yml`` workflow.
+1. **Wireframes** are authored once in ``examples/wireframes/`` —
+   these are the layout and styling for your demo UI.
 
-Assets you need (served from your GH Pages site):
+2. **Demo configs** live in ``examples/demos/`` as JSON files.  Each
+   config references a wireframe and defines the step sequence:
 
-* ``wireframe-demo-controller.js``
-* ``wireframe-demo-controls.css``
-* Your wireframe HTML file (e.g. ``wireframe.html``)
+   .. code-block:: json
 
+      {
+        "wireframe": "kitchen-sink.html",
+        "title": "Kitchen Sink — All Built-in Actions",
+        "steps": [
+          "#btn-sidebar@1800:click",
+          "#sidebar@800:toggle-class=open",
+          "#input-search@1500:set-value=pipeline"
+        ],
+        "repeat": true,
+        "height": "420px"
+      }
 
-Minimal Confluence snippet
---------------------------
+   Multiple configs can reference the **same wireframe** with different
+   step sequences.
 
-Paste this into a Confluence HTML macro, replacing the placeholder URLs
-with your project's GitHub Pages URLs:
+3. **A build script** (``examples/build.py``) combines each config with
+   its wireframe and inlines the controller JS and CSS into a single
+   self-contained HTML page.  The output has no external dependencies
+   and no ``fetch()`` calls — it works in any iframe sandbox.
 
-.. code-block:: html
-
-   <link rel="stylesheet"
-         href="https://<org>.github.io/<repo>/assets/wireframe-demo-controls.css">
-
-   <div data-wireframe-demo
-        data-wireframe-config='{
-     "htmlSrc": "https://<org>.github.io/<repo>/kitchen-sink/wireframe.html",
-     "steps": [
-       "#btn-sidebar@1800:click",
-       "#sidebar@800:toggle-class=open",
-       "#input-search@1500:set-value=pipeline",
-       "#btn-action@1500:click",
-       "#toast@800:add-class=visible",
-       "pause@2000",
-       "#toast@600:remove-class=visible",
-       "#sidebar@1200:toggle-class=open"
-     ],
-     "repeat": true
-   }' style="height: 420px;">
-   </div>
-
-   <script src="https://<org>.github.io/<repo>/assets/wireframe-demo-controller.js"></script>
+4. **GitHub Actions** runs the build on push and deploys the output to
+   GitHub Pages.
 
 
-Full example with this project's GitHub Pages
-----------------------------------------------
+Setting up your project
+-----------------------
 
-Using the **kitchen-sink** example hosted by this repository:
+1. Add your wireframe HTML files to ``examples/wireframes/``.
 
-.. code-block:: html
+2. Create a JSON config in ``examples/demos/`` for each demo variant.
+   See ``examples/demos/kitchen-sink-full.json`` for a complete
+   example.
 
-   <link rel="stylesheet"
-         href="https://your-org.github.io/docs-wireframe-demo/assets/wireframe-demo-controls.css">
+3. Test locally:
 
-   <div data-wireframe-demo
-        data-wireframe-config='{
-     "htmlSrc": "https://your-org.github.io/docs-wireframe-demo/kitchen-sink/wireframe.html",
-     "steps": [
-       "#btn-sidebar@1800:click",
-       "#sidebar@800:toggle-class=open",
-       "#input-search@1500:set-value=pipeline",
-       "#select-mode@1200:set-value=batch",
-       "#input-count@1200:set-value=50",
-       "#info-1@1500:set-attribute=data-tooltip:Real-time ETL pipeline",
-       "#card-1@1200:highlight",
-       "#card-1@1000:toggle-class=highlighted",
-       "#card-1-tag@1000:set-text=running",
-       "#status-text@800:set-text=Processing…",
-       "#status-badge@800:add-class=success",
-       "#status-badge@600:set-text=running",
-       "#log-last@1200:scroll-into-view",
-       "#btn-action@1500:click",
-       "#toast@800:add-class=visible",
-       "#toast@1000:set-text=Pipeline started successfully!",
-       "pause@2000",
-       "#toast@600:remove-class=visible",
-       "#card-2-desc@1200:set-text=Batch mode activated — processing 50 items.",
-       "#card-2-tag@800:set-text=active",
-       "#card-1@1000:toggle-class=highlighted",
-       "#status-text@1000:set-text=Complete",
-       "#status-badge@600:set-text=done",
-       "#info-1@1000:remove-attribute=data-tooltip",
-       "#sidebar@1200:toggle-class=open",
-       "pause@2000"
-     ],
-     "repeat": true
-   }' style="height: 420px;">
-   </div>
+   .. code-block:: bash
 
-   <script src="https://your-org.github.io/docs-wireframe-demo/assets/wireframe-demo-controller.js"></script>
+      python examples/build.py
+      # Open _site/kitchen-sink-full.html in a browser
 
-Replace ``your-org`` with your GitHub organisation name.
+4. Push to ``main``.  The ``pages.yml`` workflow builds and deploys the
+   pages to GitHub Pages automatically.
 
 
-Customising the demo
---------------------
+Embedding in Confluence
+-----------------------
 
-The ``steps`` array in ``data-wireframe-config`` is plain JSON — you can
-edit it directly in Confluence without touching the repository.  The
-wireframe HTML itself is fetched at runtime from GitHub Pages, so it
-stays in sync with whatever is committed to the repo.
+Use Confluence's built-in **iframe macro** (or the "Widget Connector"
+macro on Confluence Cloud):
 
-See :doc:`configuration` for the full list of config options and
-:doc:`sphinx-directive` for the step shorthand syntax reference.
+1. Get your demo page URL from GitHub Pages::
 
+      https://<org>.github.io/<repo>/kitchen-sink-full.html
 
-Controlling height and width
-----------------------------
+2. In Confluence, insert an iframe / Widget Connector macro.
 
-Set the ``style`` attribute on the container ``<div>`` to control sizing:
+3. Paste the URL and set the height (e.g. ``420px``).
 
-.. code-block:: html
-
-   <div data-wireframe-demo
-        data-wireframe-config='...'
-        style="height: 500px; max-width: 800px;">
-   </div>
+That's it.  The demo page is fully self-contained — no ``fetch()``
+calls, no CORS issues, no sandbox restrictions.
 
 
-Theming
--------
+Reusing wireframes with different steps
+---------------------------------------
 
-Override CSS custom properties on the container to match your
-Confluence space's look:
+The same wireframe can power multiple demos.  For example:
 
-.. code-block:: html
+.. code-block:: text
 
-   <style>
-     [data-wireframe-demo] {
-       --wfd-control-bg: rgba(0, 59, 77, 0.9);
-       --wfd-control-bg-hover: rgba(0, 125, 164, 0.9);
-     }
-   </style>
+   examples/
+     wireframes/
+       kitchen-sink.html          ← one wireframe
+     demos/
+       kitchen-sink-full.json     ← long demo (all actions)
+       kitchen-sink-short.json    ← short demo (highlights only)
 
-See :doc:`styling` for the full list of custom properties.
+Both JSON configs reference ``"wireframe": "kitchen-sink.html"`` but
+define different step sequences.  The build script produces a separate
+self-contained page for each.
+
+
+Demo config reference
+---------------------
+
+.. list-table::
+   :widths: 20 15 65
+   :header-rows: 1
+
+   * - Key
+     - Default
+     - Description
+   * - ``wireframe``
+     - (required)
+     - Filename of the wireframe HTML in ``examples/wireframes/``
+   * - ``title``
+     - ``"Wireframe Demo"``
+     - Page ``<title>``
+   * - ``steps``
+     - ``[]``
+     - Array of step shorthand strings or step objects
+   * - ``repeat``
+     - ``true``
+     - Loop the demo on completion
+   * - ``autoStart``
+     - ``true``
+     - Start automatically when visible
+   * - ``height``
+     - ``"100vh"``
+     - Container height in the built page
+   * - ``pauseOnInteraction``
+     - ``true``
+     - Pause on user clicks inside the demo
+   * - ``initialClass``
+     - ``""``
+     - CSS class(es) applied to the content root on load
+
+See :doc:`configuration` for full details on step syntax and options.
 
 
 Troubleshooting
 ---------------
 
-**Demo does not appear / blank container**
-   Check the browser console for CORS errors.  The wireframe HTML must
-   be served with ``Access-Control-Allow-Origin`` headers.  GitHub Pages
-   sends ``Access-Control-Allow-Origin: *`` by default, so hosting there
-   is the simplest option.
+**Demo does not appear in Confluence iframe**
+   Verify the GitHub Pages URL loads correctly in a new browser tab.
+   Check that GitHub Pages is enabled in the repo settings (Settings →
+   Pages → Source: GitHub Actions).
 
-**Scripts are stripped (Confluence Cloud)**
-   The built-in HTML macro in Confluence Cloud removes ``<script>``
-   tags.  Install a third-party HTML app that supports full JavaScript
-   execution (see note at the top of this page).
+**Demo controls are cut off**
+   Increase the iframe height in the Confluence macro settings.  The
+   play/pause/restart button is positioned 12 px from the bottom-right
+   corner of the container.
 
-**Demo controls are hidden behind Confluence UI**
-   Ensure the container has ``position: relative`` and a defined height.
-   The play/pause/restart button is absolutely positioned inside the
-   container.
+**Wireframe styles look wrong**
+   The built pages are fully self-contained with inlined styles.
+   Confluence CSS cannot leak into the iframe.  If styles look wrong,
+   check the wireframe HTML itself.
 
-**Wireframe looks different from docs**
-   Confluence injects its own CSS.  The wireframe content is loaded via
-   ``fetch()`` and injected into the container, so Confluence styles may
-   leak in.  If this is a problem, you can add a CSS reset inside your
-   wireframe HTML file, or open an issue to discuss Shadow DOM isolation
-   for the content area.
+**Changes aren't reflected**
+   GitHub Pages has a CDN cache.  After pushing changes, wait a few
+   minutes or append a cache-busting query string to the URL
+   (e.g. ``?v=2``).
