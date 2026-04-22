@@ -124,34 +124,66 @@
 
     // ── Controls template (injected into Shadow DOM) ────────────────────
 
+    // CSS custom properties (pierce Shadow DOM) for downstream theming:
+    //   --wfd-control-size          Button width & height (default: 44px)
+    //   --wfd-control-radius        Border-radius (default: 8px)
+    //   --wfd-control-bg            Background color (default: rgba(0,0,0,0.55))
+    //   --wfd-control-bg-hover      Background on hover (default: rgba(0,0,0,0.75))
+    //   --wfd-control-border        Border shorthand (default: none)
+    //   --wfd-control-color         Icon fill color (default: #fff)
+    //   --wfd-control-icon-size     SVG icon size (default: 22px)
+    //   --wfd-control-bottom        Bottom offset (default: 12px)
+    //   --wfd-control-right         Right offset (default: 12px)
+    //   --wfd-control-tooltip-bg    Tooltip background (default: rgba(0,0,0,0.8))
+    //   --wfd-control-tooltip-color Tooltip text color (default: #fff)
+
     var CONTROLS_CSS = [
-        ':host { display: block; position: absolute; bottom: 8px; right: 8px; z-index: 10000; }',
+        ':host {',
+        '  display: block; position: absolute;',
+        '  bottom: var(--wfd-control-bottom, 12px);',
+        '  right: var(--wfd-control-right, 12px);',
+        '  z-index: 10000;',
+        '}',
         '.wfd-control-btn {',
-        '  width: 32px; height: 32px; border-radius: 50%;',
-        '  border: none; cursor: pointer; padding: 0;',
-        '  background: rgba(0,0,0,0.55); color: #fff;',
+        '  width: var(--wfd-control-size, 44px);',
+        '  height: var(--wfd-control-size, 44px);',
+        '  border-radius: var(--wfd-control-radius, 8px);',
+        '  border: var(--wfd-control-border, none);',
+        '  padding: 0;',
+        '  background: var(--wfd-control-bg, rgba(0,0,0,0.55));',
+        '  color: var(--wfd-control-color, #fff);',
         '  display: flex; align-items: center; justify-content: center;',
-        '  transition: background 0.2s;',
+        '  transition: background 0.2s, transform 0.2s;',
         '  position: relative;',
         '}',
-        '.wfd-control-btn:hover { background: rgba(0,0,0,0.8); }',
-        '.wfd-control-btn svg { width: 16px; height: 16px; fill: currentColor; }',
+        '.wfd-control-btn:hover {',
+        '  background: var(--wfd-control-bg-hover, rgba(0,0,0,0.75));',
+        '  transform: scale(1.05);',
+        '}',
+        '.wfd-control-btn svg {',
+        '  width: var(--wfd-control-icon-size, 22px);',
+        '  height: var(--wfd-control-icon-size, 22px);',
+        '  fill: currentColor;',
+        '}',
         '.wfd-control-btn[hidden] { display: none; }',
         '.wfd-control-btn::after {',
         '  content: attr(data-tooltip);',
-        '  position: absolute; bottom: 110%; right: 0;',
-        '  background: rgba(0,0,0,0.8); color: #fff;',
-        '  padding: 3px 8px; border-radius: 4px; font-size: 11px;',
-        '  white-space: nowrap; pointer-events: none;',
-        '  opacity: 0; transition: opacity 0.15s;',
+        '  position: absolute; right: 100%; top: 50%;',
+        '  transform: translateY(-50%);',
+        '  margin-right: 8px;',
+        '  background: var(--wfd-control-tooltip-bg, rgba(0,0,0,0.8));',
+        '  color: var(--wfd-control-tooltip-color, #fff);',
+        '  padding: 4px 10px; border-radius: 4px; font-size: 12px;',
+        '  font-weight: 600; white-space: nowrap; pointer-events: none;',
+        '  opacity: 0; transition: opacity 0.2s;',
         '}',
         '.wfd-control-btn:hover::after { opacity: 1; }'
     ].join('\n');
 
-    // SVG icons
-    var ICON_PAUSE = '<svg viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>';
-    var ICON_PLAY = '<svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>';
-    var ICON_RESTART = '<svg viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>';
+    // SVG icons (Material Design style, white fill via currentColor)
+    var ICON_PAUSE = '<svg viewBox="0 0 24 24"><path d="M14,19H18V5H14M6,19H10V5H6V19Z"/></svg>';
+    var ICON_PLAY = '<svg viewBox="0 0 24 24"><path d="M8,5.14V19.14L19,12.14L8,5.14Z"/></svg>';
+    var ICON_RESTART = '<svg viewBox="0 0 24 24"><path d="M12,4C14.1,4 16.1,4.8 17.6,6.3C20.7,9.4 20.7,14.5 17.6,17.6C15.8,19.5 13.3,20.2 10.9,19.9L11.4,17.9C13.1,18.1 14.9,17.5 16.2,16.2C18.5,13.9 18.5,10.1 16.2,7.7C15.1,6.6 13.5,6 12,6V10.6L7,5.6L12,0.6V4M6.3,17.6C3.7,15 3.3,11 5.1,7.9L6.6,9.4C5.5,11.6 5.9,14.4 7.8,16.2C8.3,16.7 8.9,17.1 9.6,17.4L9,19.4C8,19 7.1,18.4 6.3,17.6Z"/></svg>';
 
     function createControlsHost(instance) {
         var host = document.createElement('div');
@@ -165,7 +197,7 @@
         var btn = document.createElement('button');
         btn.className = 'wfd-control-btn';
         btn.setAttribute('aria-label', 'Pause demo');
-        btn.setAttribute('data-tooltip', 'pause demo');
+        btn.setAttribute('data-tooltip', 'Pause');
         btn.innerHTML = ICON_PAUSE;
         shadow.appendChild(btn);
 
@@ -175,12 +207,12 @@
                 instance.pause();
                 btn.innerHTML = ICON_RESTART;
                 btn.setAttribute('aria-label', 'Restart demo');
-                btn.setAttribute('data-tooltip', 'restart demo');
+                btn.setAttribute('data-tooltip', 'Restart');
             } else {
                 instance.restart();
                 btn.innerHTML = ICON_PAUSE;
                 btn.setAttribute('aria-label', 'Pause demo');
-                btn.setAttribute('data-tooltip', 'pause demo');
+                btn.setAttribute('data-tooltip', 'Pause');
             }
         });
 
@@ -304,6 +336,8 @@
             })
             .then(function (html) {
                 self._contentRoot.innerHTML = html;
+                // Save the initial HTML for restart resets
+                self._initialHTML = html;
                 // Dispatch event so external code can react
                 document.dispatchEvent(new CustomEvent('wireframe-demo-loaded', {
                     detail: { container: self.container, instance: self }
@@ -368,6 +402,18 @@
         this.pause();
         this._clearHighlights();
         this._stepIndex = 0;
+
+        // Restore the content DOM to its initial state so the demo
+        // starts fresh (removes dynamically added viewers, sidebars, etc.)
+        if (this._initialHTML !== undefined) {
+            this._contentRoot.innerHTML = this._initialHTML;
+            // Re-dispatch so external code (e.g. jdaviz-wireframe-actions)
+            // can re-wire toolbar clicks, icons, etc.
+            document.dispatchEvent(new CustomEvent('wireframe-demo-loaded', {
+                detail: { container: this.container, instance: this }
+            }));
+        }
+
         this.play();
     };
 
@@ -440,6 +486,15 @@
         if (this.config.repeat) {
             var self = this;
             this._stepIndex = 0;
+
+            // Restore the content DOM to its initial state before replaying
+            if (this._initialHTML !== undefined) {
+                this._contentRoot.innerHTML = this._initialHTML;
+                document.dispatchEvent(new CustomEvent('wireframe-demo-loaded', {
+                    detail: { container: this.container, instance: this }
+                }));
+            }
+
             this._timer = setTimeout(function () {
                 self._timer = null;
                 self._runStep();

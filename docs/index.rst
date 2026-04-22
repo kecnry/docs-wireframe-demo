@@ -20,4 +20,5 @@ This package handles:
    quickstart
    configuration
    sphinx-directive
+   styling
    standalone

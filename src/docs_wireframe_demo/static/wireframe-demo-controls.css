@@ -5,7 +5,8 @@
  * because they target elements inside the consumer's HTML.
  *
  * The play/pause/restart button styles are inside the Shadow DOM
- * (see wireframe-demo-controller.js).
+ * (see wireframe-demo-controller.js) and are themeable via CSS
+ * custom properties — see README for the full list.
  */
 
 /* ── Container base ──────────────────────────────────────────────── */
@@ -34,7 +35,7 @@
 
 .wfd-controls-host {
     position: absolute;
-    bottom: 8px;
-    right: 8px;
+    bottom: 12px;
+    right: 12px;
     z-index: 10000;
 }

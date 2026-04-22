@@ -60,6 +60,7 @@ class WireframeDemoDirective(SphinxDirective):
         'js': str,
         'id': str,
         'height': str,
+        'initial-class': str,
     }
 
     def run(self):
@@ -113,6 +114,11 @@ class WireframeDemoDirective(SphinxDirective):
 
         # Height
         height = self.options.get('height', '')
+
+        # Initial CSS class(es) to apply to the content root
+        initial_class = self.options.get('initial-class', '')
+        if initial_class:
+            config['initialClass'] = initial_class
 
         config_json = json.dumps(config)
         config_escaped = html_module.escape(config_json)
