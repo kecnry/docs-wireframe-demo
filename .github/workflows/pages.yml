@@ -1,0 +1,53 @@
+name: Deploy examples to GitHub Pages
+
+on:
+  push:
+    branches: [main, confluence-support]
+    paths:
+      - 'examples/**'
+      - 'src/docs_wireframe_demo/static/**'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Build self-contained demo pages
+        run: python examples/build.py --out _site
+
+      - name: Add index page
+        run: cp examples/index.html _site/index.html
+
+      - name: Install recording dependencies
+        run: |
+          pip install playwright Pillow
+          playwright install chromium --with-deps
+
+      - name: Record demo GIFs
+        run: python examples/record.py --site _site --out _site
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4

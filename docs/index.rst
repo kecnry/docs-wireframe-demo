@@ -22,3 +22,4 @@ This package handles:
    sphinx-directive
    styling
    standalone
+   embedding

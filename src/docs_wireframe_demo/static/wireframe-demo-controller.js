@@ -322,7 +322,18 @@
                 self._onReady();
             });
         } else {
-            // No HTML to fetch — content already in container or will be added later
+            // No htmlSrc — use existing container children as inline content.
+            // Move any children that were in the container before _init into
+            // _contentRoot so selectors, restart-reset, and controls all work.
+            var existingNodes = [];
+            while (container.firstChild && container.firstChild !== this._contentRoot) {
+                existingNodes.push(container.removeChild(container.firstChild));
+            }
+            for (var i = 0; i < existingNodes.length; i++) {
+                this._contentRoot.appendChild(existingNodes[i]);
+            }
+            // Save initial HTML for restart/repeat reset
+            this._initialHTML = this._contentRoot.innerHTML;
             self._onReady();
         }
     };
