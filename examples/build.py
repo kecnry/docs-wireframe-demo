@@ -65,6 +65,10 @@ def build_page(demo_config: dict, wireframe_path: Path, controller_js: str, cont
         config["pauseOnInteraction"] = demo_config["pauseOnInteraction"]
     if demo_config.get("initialClass"):
         config["initialClass"] = demo_config["initialClass"]
+    if demo_config.get("cursor") is not None:
+        config["cursor"] = demo_config["cursor"]
+    if demo_config.get("cursorSpeed") is not None:
+        config["cursorSpeed"] = demo_config["cursorSpeed"]
 
     config_json = html.escape(json.dumps(config), quote=True)
 

@@ -14,5 +14,6 @@
   ],
   "repeat": true,
   "autoStart": true,
+  "cursor": true,
   "height": "420px"
 }

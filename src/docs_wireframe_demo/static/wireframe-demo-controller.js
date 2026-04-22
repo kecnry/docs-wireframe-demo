@@ -258,6 +258,8 @@
             repeat: true,
             autoStart: true,
             pauseOnInteraction: true,
+            cursor: false,
+            cursorSpeed: 300,
             onStepStart: null,
             onStepEnd: null,
             onComplete: null
@@ -272,6 +274,9 @@
         this._observer = null;
         this._highlightedEls = [];
         this._contentRoot = null; // the element holding fetched HTML
+        this._cursorEl = null;
+        this._cursorX = 0;
+        this._cursorY = 0;
 
         this._init();
     }
@@ -303,6 +308,11 @@
         // Create controls overlay (Shadow DOM)
         var controlsHost = createControlsHost(this);
         container.appendChild(controlsHost);
+
+        // Create animated cursor if enabled
+        if (this.config.cursor) {
+            this._createCursor();
+        }
 
         // Pause on user interaction
         if (this.config.pauseOnInteraction) {
@@ -412,6 +422,7 @@
     WireframeDemo.prototype.restart = function () {
         this.pause();
         this._clearHighlights();
+        this._resetCursor();
         this._stepIndex = 0;
 
         // Restore the content DOM to its initial state so the demo
@@ -440,6 +451,116 @@
             btn.setAttribute('aria-label', 'Restart demo');
             btn.setAttribute('data-tooltip', 'restart demo');
         }
+    };
+
+    // ── Animated cursor ─────────────────────────────────────────────────
+
+    var CURSOR_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none">'
+        + '<path d="M5 3l14 8-7 2-3 7z" fill="#111" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/>'
+        + '</svg>';
+
+    WireframeDemo.prototype._createCursor = function () {
+        var el = document.createElement('div');
+        el.className = 'wfd-cursor';
+        el.innerHTML = CURSOR_SVG;
+        el.style.cssText = 'position:absolute;z-index:9999;pointer-events:none;'
+            + 'top:0;left:0;width:20px;height:20px;opacity:0;'
+            + 'transition:opacity 150ms ease;';
+        this.container.appendChild(el);
+        this._cursorEl = el;
+        this._cursorAnim = null; // rAF id for in-flight animation
+        var rect = this.container.getBoundingClientRect();
+        this._cursorX = rect.width / 2;
+        this._cursorY = rect.height / 2;
+        el.style.transform = 'translate(' + this._cursorX + 'px,' + this._cursorY + 'px)';
+    };
+
+    // Ease-out cubic: fast departure, gentle arrival (like a real hand)
+    function _easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+
+    WireframeDemo.prototype._moveCursorTo = function (el, callback) {
+        if (!this._cursorEl || !el) {
+            if (callback) callback();
+            return;
+        }
+        // Cancel any in-flight animation
+        if (this._cursorAnim) {
+            cancelAnimationFrame(this._cursorAnim);
+            this._cursorAnim = null;
+        }
+
+        var containerRect = this.container.getBoundingClientRect();
+        var elRect = el.getBoundingClientRect();
+        var endX = (elRect.left - containerRect.left) + elRect.width / 2;
+        var endY = (elRect.top - containerRect.top) + elRect.height / 2;
+        var startX = this._cursorX;
+        var startY = this._cursorY;
+
+        // Quadratic bezier control point: offset perpendicular to the
+        // direct line, creating a slight arc like a natural hand movement.
+        var dx = endX - startX;
+        var dy = endY - startY;
+        var dist = Math.sqrt(dx * dx + dy * dy);
+        // Arc intensity scales with distance (capped), direction alternates
+        var arcAmount = Math.min(dist * 0.15, 40);
+        // Perpendicular direction (rotate 90°); alternate sign each step
+        // so consecutive moves curve in different directions.
+        this._cursorArcSign = -(this._cursorArcSign || 1);
+        var perpX = -dy / (dist || 1) * arcAmount * this._cursorArcSign;
+        var perpY =  dx / (dist || 1) * arcAmount * this._cursorArcSign;
+        var cpX = (startX + endX) / 2 + perpX;
+        var cpY = (startY + endY) / 2 + perpY;
+
+        this._cursorEl.style.opacity = '1';
+
+        var cursorEl = this._cursorEl;
+        var self = this;
+        var duration = this.config.cursorSpeed;
+        var startTime = null;
+
+        function tick(now) {
+            if (!startTime) startTime = now;
+            var elapsed = now - startTime;
+            var t = Math.min(elapsed / duration, 1);
+            var e = _easeOutCubic(t);
+
+            // Quadratic bezier: B(t) = (1-t)²·P0 + 2(1-t)t·CP + t²·P1
+            var inv = 1 - e;
+            var x = inv * inv * startX + 2 * inv * e * cpX + e * e * endX;
+            var y = inv * inv * startY + 2 * inv * e * cpY + e * e * endY;
+
+            cursorEl.style.transform = 'translate(' + x + 'px,' + y + 'px)';
+
+            if (t < 1) {
+                self._cursorAnim = requestAnimationFrame(tick);
+            } else {
+                self._cursorAnim = null;
+                self._cursorX = endX;
+                self._cursorY = endY;
+                if (callback) callback();
+            }
+        }
+
+        this._cursorAnim = requestAnimationFrame(tick);
+    };
+
+    WireframeDemo.prototype._hideCursor = function () {
+        if (this._cursorEl) {
+            this._cursorEl.style.opacity = '0';
+        }
+    };
+
+    WireframeDemo.prototype._resetCursor = function () {
+        if (!this._cursorEl) return;
+        if (this._cursorAnim) {
+            cancelAnimationFrame(this._cursorAnim);
+            this._cursorAnim = null;
+        }
+        var rect = this.container.getBoundingClientRect();
+        this._cursorX = rect.width / 2;
+        this._cursorY = rect.height / 2;
+        this._cursorEl.style.transform = 'translate(' + this._cursorX + 'px,' + this._cursorY + 'px)';
+        this._cursorEl.style.opacity = '0';
     };
 
     // ── Step execution engine ───────────────────────────────────────────
@@ -473,20 +594,36 @@
             }
         }
 
-        // Execute action
-        this._executeAction(step, el);
-
-        // Callback
-        if (this.config.onStepEnd) {
-            this.config.onStepEnd(this._stepIndex, step);
+        // Animate cursor to target, then execute action
+        if (this.config.cursor && el) {
+            var cursorSpeed = this.config.cursorSpeed;
+            this._moveCursorTo(el, function () {
+                if (!self._playing) return;
+                self._executeAction(step, el);
+                if (self.config.onStepEnd) {
+                    self.config.onStepEnd(self._stepIndex, step);
+                }
+                self._stepIndex++;
+                var remaining = Math.max(delay - cursorSpeed, 100);
+                self._timer = setTimeout(function () {
+                    self._timer = null;
+                    self._runStep();
+                }, remaining);
+            });
+        } else {
+            if (this.config.cursor && step.action === 'pause') {
+                this._hideCursor();
+            }
+            this._executeAction(step, el);
+            if (this.config.onStepEnd) {
+                this.config.onStepEnd(this._stepIndex, step);
+            }
+            this._stepIndex++;
+            this._timer = setTimeout(function () {
+                self._timer = null;
+                self._runStep();
+            }, delay);
         }
-
-        // Schedule next step
-        this._stepIndex++;
-        this._timer = setTimeout(function () {
-            self._timer = null;
-            self._runStep();
-        }, delay);
     };
 
     WireframeDemo.prototype._onSequenceEnd = function () {
@@ -505,6 +642,8 @@
                     detail: { container: this.container, instance: this }
                 }));
             }
+
+            this._resetCursor();
 
             this._timer = setTimeout(function () {
                 self._timer = null;
