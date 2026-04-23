@@ -63,6 +63,7 @@ class WireframeDemoDirective(SphinxDirective):
         'initial-class': str,
         'cursor': str,
         'cursor-speed': str,
+        'reduce-motion': str,
     }
 
     def run(self):
@@ -120,6 +121,17 @@ class WireframeDemoDirective(SphinxDirective):
                 config['cursorSpeed'] = int(cursor_speed)
             except ValueError:
                 pass
+
+        # Reduce motion
+        reduce_motion = self.options.get('reduce-motion')
+        if reduce_motion is not None:
+            val = reduce_motion.strip().lower()
+            if val == 'true':
+                config['reduceMotion'] = True
+            elif val == 'false':
+                config['reduceMotion'] = False
+            else:
+                config['reduceMotion'] = 'auto'
 
         # Container id
         container_id = self.options.get(

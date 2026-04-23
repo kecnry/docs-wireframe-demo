@@ -56,6 +56,10 @@ Directive options
    * - ``:height:``
      - —
      - Container height (e.g. ``400px``, ``50vh``).
+   * - ``:reduce-motion:``
+     - ``auto``
+     - Reduced-motion behaviour (``auto`` / ``true`` / ``false``). See
+       :doc:`accessibility`.
 
 
 Using from an external package

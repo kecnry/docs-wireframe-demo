@@ -285,18 +285,33 @@
         '  opacity: 0; pointer-events: none;',
         '  transition: opacity 0.2s;',
         '}',
-        ':host(:hover) .wfd-speed-label, .wfd-speed-label--visible, .wfd-speed-label--nondefault { opacity: 1; }'
+        ':host(:hover) .wfd-speed-label, .wfd-speed-label--visible, .wfd-speed-label--nondefault { opacity: 1; }',
+        /* Focus indicators */
+        '.wfd-control-btn:focus-visible {',
+        '  outline: 2px solid var(--wfd-control-color, #fff);',
+        '  outline-offset: 2px;',
+        '}',
+        '.wfd-control-btn--speed:focus-visible {',
+        '  outline: 2px solid var(--wfd-control-color, #fff);',
+        '  outline-offset: 1px;',
+        '}',
+        /* Reduced motion inside Shadow DOM */
+        '@media (prefers-reduced-motion: reduce) {',
+        '  .wfd-control-btn { transition: none; }',
+        '  .wfd-control-btn:hover { transform: none; }',
+        '  .wfd-control-btn--pulse::before { animation: none; }',
+        '}'
     ].join('\n');
 
     // SVG icons (Material Design style, white fill via currentColor)
-    var ICON_PAUSE = '<svg viewBox="0 0 24 24"><path d="M14,19H18V5H14M6,19H10V5H6V19Z"/></svg>';
-    var ICON_PLAY = '<svg viewBox="0 0 24 24"><path d="M8,5.14V19.14L19,12.14L8,5.14Z"/></svg>';
-    var ICON_RESTART = '<svg viewBox="0 0 24 24"><path d="M12,4C14.1,4 16.1,4.8 17.6,6.3C20.7,9.4 20.7,14.5 17.6,17.6C15.8,19.5 13.3,20.2 10.9,19.9L11.4,17.9C13.1,18.1 14.9,17.5 16.2,16.2C18.5,13.9 18.5,10.1 16.2,7.7C15.1,6.6 13.5,6 12,6V10.6L7,5.6L12,0.6V4M6.3,17.6C3.7,15 3.3,11 5.1,7.9L6.6,9.4C5.5,11.6 5.9,14.4 7.8,16.2C8.3,16.7 8.9,17.1 9.6,17.4L9,19.4C8,19 7.1,18.4 6.3,17.6Z"/></svg>';
-    var ICON_STEP_BACK = '<svg viewBox="0 0 24 24"><path d="M6,18V6H8V18H6M9.5,12L18,6V18L9.5,12Z"/></svg>';
-    var ICON_STEP_FORWARD = '<svg viewBox="0 0 24 24"><path d="M16,18H18V6H16M6,18L14.5,12L6,6V18Z"/></svg>';
+    var ICON_PAUSE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14,19H18V5H14M6,19H10V5H6V19Z"/></svg>';
+    var ICON_PLAY = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8,5.14V19.14L19,12.14L8,5.14Z"/></svg>';
+    var ICON_RESTART = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12,4C14.1,4 16.1,4.8 17.6,6.3C20.7,9.4 20.7,14.5 17.6,17.6C15.8,19.5 13.3,20.2 10.9,19.9L11.4,17.9C13.1,18.1 14.9,17.5 16.2,16.2C18.5,13.9 18.5,10.1 16.2,7.7C15.1,6.6 13.5,6 12,6V10.6L7,5.6L12,0.6V4M6.3,17.6C3.7,15 3.3,11 5.1,7.9L6.6,9.4C5.5,11.6 5.9,14.4 7.8,16.2C8.3,16.7 8.9,17.1 9.6,17.4L9,19.4C8,19 7.1,18.4 6.3,17.6Z"/></svg>';
+    var ICON_STEP_BACK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6,18V6H8V18H6M9.5,12L18,6V18L9.5,12Z"/></svg>';
+    var ICON_STEP_FORWARD = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16,18H18V6H16M6,18L14.5,12L6,6V18Z"/></svg>';
 
-    var ICON_SPEED_DOWN = '<svg viewBox="0 0 24 24"><path d="M19,13H5V11H19V13Z"/></svg>';
-    var ICON_SPEED_UP = '<svg viewBox="0 0 24 24"><path d="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z"/></svg>';
+    var ICON_SPEED_DOWN = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19,13H5V11H19V13Z"/></svg>';
+    var ICON_SPEED_UP = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z"/></svg>';
 
     function createControlsHost(instance) {
         var host = document.createElement('div');
@@ -379,6 +394,7 @@
             slowBtn.style.visibility = instance._speedFactor <= SPEED_STEPS[0] ? 'hidden' : '';
             fastBtn.style.visibility = '';
             speedLabel.classList.toggle('wfd-speed-label--nondefault', instance._speedFactor !== 1);
+            instance._announce('Speed: ' + instance._speedFactor + 'x');
         });
 
         fastBtn.addEventListener('click', function (e) {
@@ -394,6 +410,7 @@
             fastBtn.style.visibility = instance._speedFactor >= SPEED_STEPS[SPEED_STEPS.length - 1] ? 'hidden' : '';
             slowBtn.style.visibility = '';
             speedLabel.classList.toggle('wfd-speed-label--nondefault', instance._speedFactor !== 1);
+            instance._announce('Speed: ' + instance._speedFactor + 'x');
         });
 
         instance._controlBtn = primaryBtn;
@@ -444,6 +461,7 @@
             cursor: true,
             cursorSpeed: 300,
             timeline: true,
+            reduceMotion: 'auto',
             onStepStart: null,
             onStepEnd: null,
             onComplete: null
@@ -478,6 +496,8 @@
         this._htmlSnapshots = [];
         this._timelineHovering = false;
         this._timelineLeaveTimer = null;
+        this._liveRegion = null;
+        this._reduceMotion = false;
 
         this._init();
     }
@@ -488,6 +508,40 @@
 
         // Mark initialised to prevent double-init
         container.setAttribute('data-wireframe-initialized', 'true');
+
+        // ── Accessibility setup ─────────────────────────────────────────
+        if (!container.getAttribute('tabindex')) {
+            container.setAttribute('tabindex', '0');
+        }
+        container.setAttribute('role', 'region');
+        container.setAttribute('aria-label', 'Interactive wireframe demo');
+
+        // Reduced motion preference
+        this._reduceMotion = this._shouldReduceMotion();
+        if (this._reduceMotion) {
+            container.classList.add('wfd-reduce-motion');
+        }
+        if (typeof window.matchMedia === 'function') {
+            var mql = window.matchMedia('(prefers-reduced-motion: reduce)');
+            if (mql.addEventListener) {
+                mql.addEventListener('change', function () {
+                    self._reduceMotion = self._shouldReduceMotion();
+                    if (self._reduceMotion) {
+                        container.classList.add('wfd-reduce-motion');
+                    } else {
+                        container.classList.remove('wfd-reduce-motion');
+                    }
+                });
+            }
+        }
+
+        // Screen reader live region
+        this._createLiveRegion();
+
+        // Keyboard navigation
+        container.addEventListener('keydown', function (e) {
+            self._handleKeydown(e);
+        });
 
         // Ensure container is positioned so the controls overlay works
         var pos = window.getComputedStyle(container).position;
@@ -608,6 +662,115 @@
         this._observer.observe(this.container);
     };
 
+    // ── Accessibility helpers ───────────────────────────────────────────
+
+    WireframeDemo.prototype._shouldReduceMotion = function () {
+        var cfg = this.config.reduceMotion;
+        if (cfg === true) return true;
+        if (cfg === false) return false;
+        // 'auto' or undefined — honour OS preference
+        if (typeof window.matchMedia === 'function') {
+            return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        }
+        return false;
+    };
+
+    WireframeDemo.prototype._createLiveRegion = function () {
+        var el = document.createElement('div');
+        el.setAttribute('aria-live', 'polite');
+        el.setAttribute('aria-atomic', 'true');
+        el.className = 'wfd-sr-only';
+        el.style.cssText = 'position:absolute;width:1px;height:1px;padding:0;margin:-1px;'
+            + 'overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;';
+        this.container.appendChild(el);
+        this._liveRegion = el;
+    };
+
+    WireframeDemo.prototype._announce = function (message) {
+        if (!this._liveRegion) return;
+        var region = this._liveRegion;
+        region.textContent = '';
+        setTimeout(function () { region.textContent = message; }, 50);
+    };
+
+    WireframeDemo.prototype._handleKeydown = function (e) {
+        // Don't intercept when focus is on form controls inside the demo
+        var tag = e.target.tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || e.target.isContentEditable) {
+            return;
+        }
+
+        var handled = true;
+        switch (e.key) {
+            case ' ':
+            case 'Enter':
+                if (this._playing) { this.pause(); } else { this.play(); }
+                break;
+            case 'ArrowRight':
+                if (this._stepIndex < this._steps.length - 1) {
+                    this.jumpToStep(this._stepIndex + 1);
+                    this._announce('Step ' + (this._stepIndex + 1) + ' of ' + this._steps.length);
+                }
+                break;
+            case 'ArrowLeft':
+                if (this._stepIndex > 0) {
+                    this.jumpToStep(this._stepIndex - 1);
+                    this._announce('Step ' + (this._stepIndex + 1) + ' of ' + this._steps.length);
+                }
+                break;
+            case 'Home':
+                this.jumpToStep(0);
+                this._announce('Step 1 of ' + this._steps.length);
+                break;
+            case 'End':
+                this.jumpToStep(this._steps.length - 1);
+                this._announce('Step ' + this._steps.length + ' of ' + this._steps.length);
+                break;
+            case '+':
+            case '=':
+                this._adjustSpeed(1);
+                break;
+            case '-':
+            case '_':
+                this._adjustSpeed(-1);
+                break;
+            case 'r':
+            case 'R':
+                this.restart();
+                break;
+            default:
+                handled = false;
+        }
+        if (handled) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+    };
+
+    WireframeDemo.prototype._adjustSpeed = function (direction) {
+        var SPEED_STEPS = [0.25, 0.5, 1, 2, 4];
+        var cur = this._speedFactor;
+        var newSpeed = cur;
+        var i;
+        if (direction > 0) {
+            for (i = 0; i < SPEED_STEPS.length; i++) {
+                if (SPEED_STEPS[i] > cur) { newSpeed = SPEED_STEPS[i]; break; }
+            }
+        } else {
+            for (i = SPEED_STEPS.length - 1; i >= 0; i--) {
+                if (SPEED_STEPS[i] < cur) { newSpeed = SPEED_STEPS[i]; break; }
+            }
+        }
+        if (newSpeed !== cur) {
+            this._speedFactor = newSpeed;
+            if (this._speedLabel) {
+                this._speedLabel.textContent = newSpeed + '\u00d7';
+                this._speedLabel.classList.toggle('wfd-speed-label--nondefault', newSpeed !== 1);
+            }
+            this._announce('Speed: ' + newSpeed + 'x');
+        }
+    };
+
     // ── Playback controls ───────────────────────────────────────────────
 
     WireframeDemo.prototype.play = function () {
@@ -616,6 +779,7 @@
         this._started = true;
         this._updateControlBtn();
         this._updateTooltip();
+        this._announce('Playing');
         this._runStep();
     };
 
@@ -628,6 +792,7 @@
         }
         this._updateControlBtn(true);
         this._updateTooltip();
+        this._announce('Paused at step ' + (this._stepIndex + 1) + ' of ' + this._steps.length);
     };
 
     WireframeDemo.prototype.restart = function () {
@@ -720,6 +885,17 @@
         var elRect = el.getBoundingClientRect();
         var endX = (elRect.left - containerRect.left) + elRect.width / 2;
         var endY = (elRect.top - containerRect.top) + elRect.height / 2;
+
+        // Reduced motion: teleport cursor without animation
+        if (this._reduceMotion) {
+            this._cursorX = endX;
+            this._cursorY = endY;
+            this._cursorEl.style.transform = 'translate(' + endX + 'px,' + endY + 'px)';
+            this._cursorEl.style.opacity = '1';
+            if (callback) callback();
+            return;
+        }
+
         var startX = this._cursorX;
         var startY = this._cursorY;
 
@@ -850,6 +1026,9 @@
 
         // Show
         captionEl.classList.add('wfd-caption--visible');
+
+        // Announce for screen readers
+        this._announce(step.caption);
     };
 
     WireframeDemo.prototype._hideCaption = function () {
@@ -879,6 +1058,8 @@
         var self = this;
         var el = document.createElement('div');
         el.className = 'wfd-timeline';
+        el.setAttribute('role', 'group');
+        el.setAttribute('aria-label', 'Demo steps');
         this._timelineDots = [];
 
         for (var i = 0; i < this._steps.length; i++) {
@@ -1206,8 +1387,10 @@
             }
             if (i === this._stepIndex) {
                 dot.classList.add('wfd-timeline__dot--current');
+                dot.setAttribute('aria-current', 'step');
             } else {
                 dot.classList.remove('wfd-timeline__dot--current');
+                dot.removeAttribute('aria-current');
             }
         }
     };
@@ -1599,6 +1782,10 @@
         this.pause();
         this._clearHighlights();
         this._hideCaption();
+        if (this._liveRegion && this._liveRegion.parentNode) {
+            this._liveRegion.parentNode.removeChild(this._liveRegion);
+            this._liveRegion = null;
+        }
         if (this._observer) {
             this._observer.disconnect();
             this._observer = null;

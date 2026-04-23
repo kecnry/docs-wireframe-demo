@@ -256,3 +256,66 @@
 .wfd-timeline-tooltip__btn--play:hover {
     background: rgba(255, 255, 255, 0.25);
 }
+
+/* ── Focus indicators ────────────────────────────────────────────── */
+
+.wfd-timeline__dot:focus-visible {
+    outline: 2px solid var(--wfd-timeline-dot-color, #fff);
+    outline-offset: 2px;
+}
+
+.wfd-timeline-tooltip__btn:focus-visible {
+    outline: 2px solid var(--wfd-control-color, #fff);
+    outline-offset: 1px;
+}
+
+/* ── Reduced motion ──────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+    .wfd-highlight {
+        animation: none;
+    }
+    .wfd-caption {
+        transition: none;
+    }
+    .wfd-caption--bottom {
+        transition: none;
+    }
+    .wfd-timeline {
+        transition: none;
+    }
+    .wfd-timeline__dot::after {
+        transition: none;
+    }
+    .wfd-timeline__dot:hover::after {
+        transform: translate(-50%, -50%);
+    }
+    .wfd-timeline__dot--current::after {
+        transform: translate(-50%, -50%);
+    }
+    .wfd-timeline-tooltip {
+        transition: none;
+    }
+    .wfd-timeline-tooltip__btn {
+        transition: none;
+    }
+}
+
+/* Config-driven reduced motion (reduceMotion: true) */
+.wfd-reduce-motion .wfd-highlight {
+    animation: none;
+}
+.wfd-reduce-motion .wfd-caption,
+.wfd-reduce-motion .wfd-caption--bottom {
+    transition: none;
+}
+.wfd-reduce-motion .wfd-timeline,
+.wfd-reduce-motion .wfd-timeline__dot::after,
+.wfd-reduce-motion .wfd-timeline-tooltip,
+.wfd-reduce-motion .wfd-timeline-tooltip__btn {
+    transition: none;
+}
+.wfd-reduce-motion .wfd-timeline__dot:hover::after,
+.wfd-reduce-motion .wfd-timeline__dot--current::after {
+    transform: translate(-50%, -50%);
+}

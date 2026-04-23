@@ -26,5 +26,6 @@ This package handles:
    configuration
    sphinx-directive
    styling
+   accessibility
    standalone
    embedding

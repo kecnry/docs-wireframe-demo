@@ -52,6 +52,14 @@ When creating a ``WireframeDemo`` programmatically or via the
        completed steps. Click a dot to jump to that step. Set to ``false``
        to disable (also skips HTML snapshot caching used for backward
        navigation).
+   * - ``reduceMotion``
+     - bool / string
+     - ``'auto'``
+     - Controls reduced-motion behaviour. ``'auto'`` (default) honours the
+       operating system's ``prefers-reduced-motion`` setting. ``true`` forces
+       all animations off regardless of OS preference. ``false`` keeps
+       animations on even when the OS requests reduced motion. See
+       :doc:`accessibility` for details.
    * - ``onStepStart``
      - function
      - ``null``
