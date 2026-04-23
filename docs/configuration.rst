@@ -44,6 +44,14 @@ When creating a ``WireframeDemo`` programmatically or via the
      - number
      - ``300``
      - Duration in milliseconds for the cursor movement animation.
+   * - ``timeline``
+     - bool
+     - ``true``
+     - Show an interactive progress timeline at the bottom of the container
+       on hover. Each step is represented as a dot; filled dots indicate
+       completed steps. Click a dot to jump to that step. Set to ``false``
+       to disable (also skips HTML snapshot caching used for backward
+       navigation).
    * - ``onStepStart``
      - function
      - ``null``
