@@ -134,3 +134,40 @@ Each gets its own independent container, playback state, and controls:
 
 They will not interfere with each other — each instance manages its own
 step index, timers, and pause state.
+
+
+Adding captions
+---------------
+
+Steps can include transcript-style captions that appear as a semi-transparent
+overlay at the top or bottom of the demo container.
+
+**Using the shorthand** ``:steps:`` **syntax**, append ``|caption text`` to any
+step string.  Use ``^`` or ``v`` to force top or bottom positioning:
+
+.. code-block:: rst
+
+   .. wireframe-demo:: _static/my-wireframe.html
+      :steps: #btn@1500:click|Click the button, #panel@1000:toggle-class=open|^Panel opens, pause@2000|vDone!
+      :height: 400px
+
+**Using** ``:steps-json:`` **for full control**, include ``caption`` and
+optionally ``captionOptions`` on each step object:
+
+.. code-block:: rst
+
+   .. wireframe-demo:: _static/my-wireframe.html
+      :steps-json: [
+         {"target": "#btn", "action": "click", "delay": 1500,
+          "caption": "Click the button"},
+         {"target": "#panel", "action": "toggle-class", "value": "open",
+          "delay": 1000, "caption": "Panel opens",
+          "captionOptions": {"position": "top"}},
+         {"action": "pause", "delay": 2000,
+          "caption": "All done!", "captionOptions": {"position": "bottom"}}
+         ]
+      :height: 400px
+
+Steps without a ``caption`` will hide any previously visible caption.
+See :doc:`configuration` for the full list of ``captionOptions`` fields
+and CSS custom properties for styling.

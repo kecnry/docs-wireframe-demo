@@ -149,6 +149,55 @@ document, not the Shadow DOM. You can override it with normal CSS:
        animation: none;
    }
 
+
+Customizing the caption overlay
+--------------------------------
+
+Captions (the semi-transparent text overlay shown when steps include a
+``caption`` field) can be themed via CSS custom properties:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 30 40 30
+
+   * - Property
+     - What it controls
+     - Default
+   * - ``--wfd-caption-bg``
+     - Background color
+     - ``rgba(0,0,0,0.72)``
+   * - ``--wfd-caption-color``
+     - Text color
+     - ``#fff``
+   * - ``--wfd-caption-font-size``
+     - Font size
+     - ``14px``
+   * - ``--wfd-caption-padding``
+     - Padding
+     - ``10px 16px``
+   * - ``--wfd-caption-inset``
+     - Left & right inset — centres the caption and keeps it clear of the
+       control button
+     - ``68px``
+
+.. code-block:: css
+
+   [data-wireframe-demo] {
+       --wfd-caption-bg: rgba(0, 0, 80, 0.85);
+       --wfd-caption-font-size: 16px;
+   }
+
+You can also apply a custom CSS class to individual captions using the
+``captionOptions.className`` field in JSON step objects, or target the
+``.wfd-caption`` element directly:
+
+.. code-block:: css
+
+   /* Subtle border on all captions */
+   .wfd-caption {
+       border-top: 1px solid rgba(255, 255, 255, 0.15);
+   }
+
    /* Change outline width and offset */
    .wfd-highlight {
        outline-width: 3px;

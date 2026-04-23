@@ -56,7 +56,7 @@ Then use the directive in any RST file:
 ### Shorthand string
 
 ```
-target@delay:action=value
+target@delay:action=value|caption text
 ```
 
 | Part       | Description                                                    | Default     |
@@ -65,6 +65,18 @@ target@delay:action=value
 | `@delay`   | Milliseconds to wait before the next step; append `!` to suppress highlight | `2000` |
 | `:action`  | Action name (`click`, `add-class`, `toggle-class`, …)          | `highlight` |
 | `=value`   | Value passed to the action                                     | *(none)*    |
+| `\|text`  | Optional caption text shown as a semi-transparent overlay       | *(none)*    |
+
+Caption text is separated from the rest of the step by a `|` pipe character.
+Prefix the text with `^` to force the caption to the **top**, or `v` to force
+it to the **bottom**. Without a prefix the position is chosen automatically
+(opposite the target element).
+
+```
+#btn@1500:click|Click the button           → auto-positioned caption
+#btn@1500:click|^Click the button           → forced to top
+#sidebar@800:toggle-class=open|vOpening…    → forced to bottom
+```
 
 ### JSON step object
 
@@ -73,9 +85,19 @@ target@delay:action=value
   "target": "#my-btn",
   "action": "click",
   "delay": 1500,
-  "noHighlight": true
+  "noHighlight": true,
+  "caption": "Click the button to proceed",
+  "captionOptions": {
+    "position": "bottom",
+    "className": "my-custom-caption"
+  }
 }
 ```
+
+| Field            | Description                                                             |
+| ---------------- | ----------------------------------------------------------------------- |
+| `caption`        | Text shown as a semi-transparent overlay during this step               |
+| `captionOptions` | Optional object with `position` (`"top"`, `"bottom"`, or `"auto"`) and/or `className` (extra CSS class) |
 
 ### Built-in actions
 
@@ -144,6 +166,29 @@ html[data-theme="light"] [data-wireframe-demo] {
 }
 ```
 
+### Styling captions
+
+Caption overlays are styled via CSS custom properties on the
+`[data-wireframe-demo]` container:
+
+| Custom property              | What it controls           | Default                 |
+| ---------------------------- | -------------------------- | ----------------------- |
+| `--wfd-caption-bg`           | Background color           | `rgba(0,0,0,0.72)`     |
+| `--wfd-caption-color`        | Text color                 | `#fff`                  |
+| `--wfd-caption-font-size`    | Font size                  | `14px`                  |
+| `--wfd-caption-padding`      | Padding                    | `10px 16px`             |
+| `--wfd-caption-inset`        | Left & right inset (keeps clear of controls) | `68px` |
+
+```css
+[data-wireframe-demo] {
+    --wfd-caption-bg: rgba(0, 0, 80, 0.8);
+    --wfd-caption-font-size: 16px;
+}
+```
+
+You can also apply a per-step custom class via `captionOptions.className`
+(in JSON objects) to style individual captions differently.
+
 ### Overriding highlight styles
 
 The element highlight (orange pulse) is injected into the main document, so
@@ -176,8 +221,9 @@ directly:
 const demo = new WireframeDemo(containerElement, {
     htmlSrc: '_static/app.html',
     steps: [
-        '#btn@1500:click',
-        { target: '.panel', action: 'toggle-class', value: 'open', delay: 1000 }
+        '#btn@1500:click|Click the button',
+        { target: '.panel', action: 'toggle-class', value: 'open', delay: 1000,
+          caption: 'Opening the panel', captionOptions: { position: 'bottom' } }
     ],
     repeat: true,
     autoStart: true,

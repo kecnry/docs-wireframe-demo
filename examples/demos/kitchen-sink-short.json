@@ -2,14 +2,29 @@
   "wireframe": "kitchen-sink.html",
   "title": "Kitchen Sink — Quick Overview",
   "steps": [
-    "#btn-sidebar@1800:click",
+    "#btn-sidebar@1800:click|Open the sidebar",
     "#sidebar@800:toggle-class=open",
-    "#input-search@1500:set-value=pipeline",
-    "#btn-action@1500:click",
-    "#toast@800:add-class=visible",
+    {
+      "target": "#input-search",
+      "action": "set-value",
+      "value": "pipeline",
+      "delay": 1500,
+      "caption": "Search for a pipeline",
+      "captionOptions": { "position": "top" }
+    },
+    "#btn-action@1500:click|^Run the batch action",
+    {
+      "actions": [
+        { "target": "#toast", "action": "add-class", "value": "visible" },
+        { "target": "#status-badge", "action": "add-class", "value": "success" },
+        { "target": "#status-text", "action": "set-text", "value": "Running" }
+      ],
+      "delay": 2000,
+      "caption": "Multiple updates at once"
+    },
     "pause@2000",
     "#toast@600:remove-class=visible",
-    "#sidebar@1200:toggle-class=open",
+    "#sidebar@1200:toggle-class=open|vClose the sidebar",
     "pause@2000"
   ],
   "repeat": true,

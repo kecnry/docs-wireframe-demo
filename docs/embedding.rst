@@ -98,6 +98,12 @@ Use Confluence's built-in **image macro** to embed the animated GIF:
 
 The GIF loops automatically and shows the full demo sequence.
 
+For example, the "kitchen-sink-short" demo GIF hosted on GitHub Pages:
+
+.. image:: https://spacetelescope.github.io/docs-wireframe-demo/kitchen-sink-short.gif
+   :alt: Kitchen Sink Short — animated GIF demo
+   :width: 100%
+
 
 Linking to the interactive version
 ----------------------------------
