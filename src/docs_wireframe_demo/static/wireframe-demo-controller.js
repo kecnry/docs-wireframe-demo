@@ -145,11 +145,13 @@
                 };
                 for (var j = 0; j < item.actions.length; j++) {
                     var sub = item.actions[j];
-                    multi.actions.push({
+                    var parsed = {
                         target: sub.target || null,
                         action: sub.action || 'highlight',
                         value: sub.value
-                    });
+                    };
+                    if (typeof sub.delay === 'number') parsed.delay = sub.delay;
+                    multi.actions.push(parsed);
                 }
                 if (item.caption !== undefined) multi.caption = item.caption;
                 if (item.captionOptions) multi.captionOptions = item.captionOptions;
@@ -1334,35 +1336,37 @@
         // Show caption at the start of the step (while cursor moves)
         this._showCaption(step, el);
 
+        // Callback invoked after the action (and any sub-action delays) finish
+        var afterAction = function (cursorOverhead) {
+            cursorOverhead = cursorOverhead || 0;
+            if (!self._playing) return;
+            if (self.config.onStepEnd) {
+                self.config.onStepEnd(self._stepIndex, step);
+            }
+            self._stepIndex++;
+            var remaining = cursorOverhead > 0 ? Math.max(delay - cursorOverhead, 100) : delay;
+            self._timer = setTimeout(function () {
+                self._timer = null;
+                self._runStep();
+            }, remaining);
+        };
+
         // Animate cursor to target, then execute action
         if (this.config.cursor && el) {
             var cursorSpeed = this.config.cursorSpeed / this._speedFactor;
             this._moveCursorTo(el, function () {
                 if (!self._playing) return;
-                self._executeAction(step, el);
-                if (self.config.onStepEnd) {
-                    self.config.onStepEnd(self._stepIndex, step);
-                }
-                self._stepIndex++;
-                var remaining = Math.max(delay - cursorSpeed, 100);
-                self._timer = setTimeout(function () {
-                    self._timer = null;
-                    self._runStep();
-                }, remaining);
+                self._executeAction(step, el, function () {
+                    afterAction(cursorSpeed);
+                });
             });
         } else {
             if (this.config.cursor && !step.actions && step.action === 'pause') {
                 this._hideCursor();
             }
-            this._executeAction(step, el);
-            if (this.config.onStepEnd) {
-                this.config.onStepEnd(this._stepIndex, step);
-            }
-            this._stepIndex++;
-            this._timer = setTimeout(function () {
-                self._timer = null;
-                self._runStep();
-            }, delay);
+            this._executeAction(step, el, function () {
+                afterAction(0);
+            });
         }
     };
 
@@ -1398,22 +1402,57 @@
         }
     };
 
-    WireframeDemo.prototype._executeAction = function (step, el) {
-        // Multi-action step: execute each sub-action in sequence
+    WireframeDemo.prototype._executeAction = function (step, el, callback) {
+        // Multi-action step: execute sub-actions, optionally with delays between them
         if (step.actions && Array.isArray(step.actions)) {
-            for (var i = 0; i < step.actions.length; i++) {
-                var sub = step.actions[i];
+            var self = this;
+            var subs = step.actions;
+
+            var executeSub = function (index) {
+                if (index >= subs.length) {
+                    if (callback) callback();
+                    return;
+                }
+                var sub = subs[index];
                 var subEl = null;
                 if (sub.target) {
-                    subEl = this._contentRoot.querySelector(sub.target) ||
-                            this.container.querySelector(sub.target);
+                    subEl = self._contentRoot.querySelector(sub.target) ||
+                            self.container.querySelector(sub.target);
                 }
-                this._executeSingleAction(sub.action, sub.value, subEl, step);
-            }
+                // Build a synthetic step so custom actions see the sub-action's
+                // value/action/target while still inheriting parent metadata.
+                var syntheticStep = {
+                    action: sub.action,
+                    value: sub.value,
+                    target: sub.target || null,
+                    delay: step.delay,
+                    noHighlight: step.noHighlight,
+                    caption: step.caption,
+                    captionOptions: step.captionOptions
+                };
+                self._executeSingleAction(sub.action, sub.value, subEl, syntheticStep);
+
+                // If this sub-action has a delay and there is a callback
+                // (i.e. we are in live playback, not a jump/replay), schedule
+                // the next sub-action after the delay.
+                var subDelay = typeof sub.delay === 'number' ? sub.delay / self._speedFactor : 0;
+                if (subDelay > 0 && callback) {
+                    self._timer = setTimeout(function () {
+                        self._timer = null;
+                        if (!self._playing) return;
+                        executeSub(index + 1);
+                    }, subDelay);
+                } else {
+                    executeSub(index + 1);
+                }
+            };
+
+            executeSub(0);
             return;
         }
 
         this._executeSingleAction(step.action, step.value, el, step);
+        if (callback) callback();
     };
 
     WireframeDemo.prototype._executeSingleAction = function (action, value, el, step) {

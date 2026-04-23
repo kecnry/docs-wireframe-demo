@@ -124,7 +124,7 @@ Multi-action steps
 ^^^^^^^^^^^^^^^^^^
 
 A step can execute **multiple actions at once** by providing an ``actions``
-array instead of a single ``action`` field. All sub-actions run
+array instead of a single ``action`` field. By default sub-actions run
 synchronously (no delay between them), and the step's ``delay`` applies
 after all actions have executed.
 
@@ -142,6 +142,28 @@ or toggling a class while also setting text.
      "delay": 1500,
      "caption": "Open sidebar and update status"
    }
+
+Individual sub-actions can include an optional ``delay`` (in ms) to pause
+before the next sub-action executes. This is useful for showing cause and
+effect within a single step — for example, clicking a button and then
+revealing the result after a short pause:
+
+.. code-block:: json
+
+   {
+     "actions": [
+       { "action": "click-button", "value": "Load", "delay": 500 },
+       { "action": "viewer-add", "value": "horiz:Image" },
+       { "action": "viewer-image", "value": "Image:photo.png" }
+     ],
+     "delay": 3000,
+     "caption": "Load the data"
+   }
+
+Sub-action delays do not create individual timeline dots, captions, or
+steppable positions — they are purely visual timing within one step.
+The delay on the last sub-action is also respected before the step's
+top-level ``delay`` begins.
 
 Each object in the ``actions`` array supports:
 
@@ -161,6 +183,11 @@ Each object in the ``actions`` array supports:
    * - ``value``
      - no
      - Action-specific value.
+   * - ``delay``
+     - no
+     - Milliseconds to wait after this sub-action before executing the next
+       one. Defaults to ``0`` (immediate). Respects the current playback
+       speed.
 
 The top-level ``delay``, ``caption``, ``captionOptions``, and
 ``noHighlight`` fields work the same as on a single-action step. The
