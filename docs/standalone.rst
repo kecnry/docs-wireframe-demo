@@ -106,7 +106,7 @@ Full standalone example
               "steps": [
                 "#start-btn@2000:click",
                 "#sidebar@1000:add-class=open",
-                "#search@1500:set-value=example query",
+                "#search@1500:type-text=example query",
                 "#search-btn@1500:click",
                 "#sidebar@1000:remove-class=open",
                 "pause@2000"

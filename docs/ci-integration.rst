@@ -93,7 +93,7 @@ definitions) along with the PR diff to an LLM, which determines:
   CSS adjustments, custom action changes)
 
 The LLM understands the wireframe demo format, including built-in actions
-(``click``, ``toggle-class``, ``set-value``, etc.) and custom registered actions.
+(``click``, ``toggle-class``, ``type-text``, ``set-value``, etc.) and custom registered actions.
 
 
 Step Validation

@@ -4,7 +4,7 @@
   "steps": [
     "#btn-sidebar@1800:click|Open the sidebar",
     "#sidebar@800:toggle-class=open",
-    "#input-search@1500:set-value=pipeline|Search for a pipeline",
+    "#input-search@1500:type-text=pipeline|Search for a pipeline",
     "#select-mode@1200:set-value=batch|Switch to batch mode",
     "#input-count@1200:set-value=50|Set the batch count",
     "#info-1@1500:set-attribute=data-tooltip:Real-time ETL pipeline|Add a tooltip to the info icon",

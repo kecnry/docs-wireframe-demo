@@ -1756,8 +1756,7 @@
                     caption: step.caption,
                     captionOptions: step.captionOptions
                 };
-                self._executeSingleAction(sub.action, sub.value, subEl, syntheticStep);
-
+                self._executeSingleAction(sub.action, sub.value, subEl, syntheticStep, function () {
                 // If this sub-action has a delay and there is a callback
                 // (i.e. we are in live playback, not a jump/replay), schedule
                 // the next sub-action after the delay.
@@ -1771,21 +1770,22 @@
                 } else {
                     executeSub(index + 1);
                 }
+                });
             };
 
             executeSub(0);
             return;
         }
 
-        this._executeSingleAction(step.action, step.value, el, step);
-        if (callback) callback();
+        this._executeSingleAction(step.action, step.value, el, step, callback);
     };
 
-    WireframeDemo.prototype._executeSingleAction = function (action, value, el, step) {
+    WireframeDemo.prototype._executeSingleAction = function (action, value, el, step, callback) {
 
         // Check custom actions first
         if (_customActions[action]) {
             _customActions[action].call(this, step, el, this._contentRoot);
+            if (callback) callback();
             return;
         }
 
@@ -1893,9 +1893,17 @@
                 }
                 break;
 
+            case 'type-text':
+                if (el && value !== undefined) {
+                    this._typeText(el, value, step, callback);
+                    return; // callback is called by _typeText when done
+                }
+                break;
+
             default:
                 console.warn('[WireframeDemo] Unknown action: ' + action);
         }
+        if (callback) callback();
     };
 
     // ── Highlight helpers ───────────────────────────────────────────────
@@ -1917,6 +1925,102 @@
             this._highlightedEls[i].classList.remove('wfd-highlight');
         }
         this._highlightedEls = [];
+    };
+
+    // ── Type-text action ────────────────────────────────────────────────
+
+    /**
+     * Animate typing text into an element over the step's delay.
+     *
+     * Automatically chooses letter-at-a-time or word-at-a-time based on
+     * what yields a comfortable interval (>= 40ms per chunk).  For very
+     * short text or very long delays, letter mode is used; for long text
+     * with tight timing, word mode keeps it readable.
+     *
+     * Sets .value for input/textarea elements, .textContent otherwise.
+     * Dispatches "input" events on each keystroke for inputs.
+     */
+    WireframeDemo.prototype._typeText = function (el, text, step, callback) {
+        var self = this;
+        var isInput = (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA');
+        var baseDelay = typeof step.delay === 'number' ? step.delay : 2000;
+        var totalTime = baseDelay / this._speedFactor;
+
+        // Reserve 20% of the delay for the post-typing pause
+        var typingTime = totalTime * 0.8;
+
+        // Decide granularity: split into letters, check if interval is comfortable
+        var letters = text.split('');
+        var letterInterval = letters.length > 0 ? typingTime / letters.length : typingTime;
+        var MIN_INTERVAL = 40; // ms — minimum time per chunk
+
+        var chunks, mode;
+        if (letterInterval >= MIN_INTERVAL) {
+            // Letter-at-a-time
+            chunks = letters;
+            mode = 'letter';
+        } else {
+            // Word-at-a-time: split on spaces, preserving spacing
+            chunks = text.match(/\S+\s*/g) || [text];
+            var wordInterval = chunks.length > 0 ? typingTime / chunks.length : typingTime;
+            if (wordInterval < MIN_INTERVAL && chunks.length > 1) {
+                // Even words are too fast — group into larger chunks
+                var targetChunks = Math.max(1, Math.floor(typingTime / MIN_INTERVAL));
+                var charsPerChunk = Math.ceil(text.length / targetChunks);
+                chunks = [];
+                for (var c = 0; c < text.length; c += charsPerChunk) {
+                    chunks.push(text.substring(c, c + charsPerChunk));
+                }
+            }
+            mode = 'word';
+        }
+
+        var interval = chunks.length > 0 ? typingTime / chunks.length : 0;
+        var currentText = '';
+        var chunkIndex = 0;
+
+        if (!step.noHighlight) this._highlight(el, baseDelay);
+
+        // For non-live playback (jumpToStep replay), set instantly
+        if (!callback) {
+            if (isInput) {
+                el.value = text;
+                el.dispatchEvent(new Event('input', { bubbles: true }));
+                el.dispatchEvent(new Event('change', { bubbles: true }));
+            } else {
+                el.textContent = text;
+            }
+            return;
+        }
+
+        function typeNextChunk() {
+            if (!self._playing || chunkIndex >= chunks.length) {
+                // Finished typing — set final value to be safe
+                if (isInput) {
+                    el.value = text;
+                    el.dispatchEvent(new Event('input', { bubbles: true }));
+                    el.dispatchEvent(new Event('change', { bubbles: true }));
+                } else {
+                    el.textContent = text;
+                }
+                if (callback) callback();
+                return;
+            }
+
+            currentText += chunks[chunkIndex];
+            chunkIndex++;
+
+            if (isInput) {
+                el.value = currentText;
+                el.dispatchEvent(new Event('input', { bubbles: true }));
+            } else {
+                el.textContent = currentText;
+            }
+
+            self._timer = setTimeout(typeNextChunk, interval);
+        }
+
+        typeNextChunk();
     };
 
     // ── Cleanup ─────────────────────────────────────────────────────────

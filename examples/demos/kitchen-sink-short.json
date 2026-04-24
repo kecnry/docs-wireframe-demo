@@ -6,7 +6,7 @@
     "#sidebar@800:toggle-class=open",
     {
       "target": "#input-search",
-      "action": "set-value",
+      "action": "type-text",
       "value": "pipeline",
       "delay": 1500,
       "caption": "Search for a pipeline",

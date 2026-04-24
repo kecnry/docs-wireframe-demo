@@ -218,8 +218,7 @@ Examples:
    #btn@1500!:click                   → click (no highlight), hold 1500ms
    pause@3000                         → wait 3 seconds
    #el:highlight                      → highlight with default 2000ms delay
-   #input@1000:set-value=Hello        → set input value to “Hello”
-   #btn@1500:click|Click me           → click with auto-positioned caption
+   #input@1000:set-value=Hello        → set input value to “Hello”   #input@1500:type-text=Hello World   → type "Hello World" letter-by-letter   #btn@1500:click|Click me           → click with auto-positioned caption
    #btn@1500:click|^Click me          → click with caption forced to top
    #btn@1500:click|vClick me          → click with caption forced to bottom
 
@@ -260,6 +259,11 @@ Supported actions
    * - ``set-value``
      - value
      - Set ``.value`` on an input/select and dispatch ``input``/``change`` events.
+   * - ``type-text``
+     - text
+     - Animate typing text into an input or element over the step's delay.
+       Automatically uses letter-at-a-time for short text or word-at-a-time
+       for long text, based on what yields a comfortable typing speed.
    * - ``set-text``
      - text
      - Set ``.textContent`` of the target.
@@ -339,7 +343,7 @@ To force the caption position, prefix the text with ``^`` (top) or ``v``
 
    {
      "target": "#input-search",
-     "action": "set-value",
+     "action": "type-text",
      "value": "pipeline",
      "delay": 1500,
      "caption": "Search for a pipeline",
