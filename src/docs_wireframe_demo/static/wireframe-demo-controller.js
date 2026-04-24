@@ -1599,9 +1599,20 @@
                 detail: { container: this.container, instance: this }
             }));
             // Replay steps from restoreFrom (or 0) up to targetIndex-1
+            // Skip highlight-only steps since they don't change DOM state
             var start = restoreFrom >= 0 ? restoreFrom : 0;
             for (var j = start; j < targetIndex; j++) {
                 var s = this._steps[j];
+                // Skip pure highlight steps during fast-forward replay
+                var skipStep = false;
+                if (s.actions && Array.isArray(s.actions)) {
+                    skipStep = s.actions.every(function (sub) {
+                        return sub.action === 'highlight';
+                    });
+                } else {
+                    skipStep = (!s.action || s.action === 'highlight' || s.action === 'pause');
+                }
+                if (skipStep) continue;
                 if (this.config.timeline !== false && !this._htmlSnapshots[j]) {
                     this._htmlSnapshots[j] = this._contentRoot.innerHTML;
                 }
