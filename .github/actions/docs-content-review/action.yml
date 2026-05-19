@@ -1,0 +1,63 @@
+name: 'Documentation Content Review'
+description: >
+  Auto-discovers documentation files, analyzes PR diffs for code changes that may
+  affect docs, and posts a comment with proposed doc text/link updates using an LLM.
+
+inputs:
+  docs-root:
+    description: 'Path to the documentation root directory to scan for doc files.'
+    required: false
+    default: 'docs/'
+  source-root:
+    description: 'Path to the source code root. Only diffs under this path are analyzed.'
+    required: false
+    default: '.'
+  config-path:
+    description: >
+      Path to an explicit docs-review config file (.github/docs-review.yml).
+      If provided, uses explicit doc file mappings instead of auto-discovery.
+    required: false
+    default: ''
+  provider:
+    description: 'LLM provider: github-models, openai, or anthropic.'
+    required: false
+    default: 'github-models'
+  model:
+    description: 'LLM model name. Defaults to a provider-appropriate model if not set.'
+    required: false
+    default: ''
+  api-key:
+    description: >
+      API key for the LLM provider. Not required for github-models (uses GITHUB_TOKEN).
+      For openai/anthropic, provide the appropriate API key.
+    required: false
+    default: ''
+  max-diff-size:
+    description: 'Maximum diff size in characters to send to the LLM. Larger diffs are summarized.'
+    required: false
+    default: '50000'
+  max-prompt-tokens:
+    description: >
+      Maximum total prompt tokens for each LLM request. The diff is truncated to fit
+      within this budget after the doc content. Lower this for providers with
+      small context windows (e.g., 6000 for GitHub Models free tier).
+    required: false
+    default: '100000'
+  fail-on-error:
+    description: >
+      Whether to fail the action (non-zero exit) when validation errors are found
+      or the LLM suggests doc updates are needed. Set to 'true' to block
+      PR merges via required status checks.
+    required: false
+    default: 'false'
+  auto-apply:
+    description: >
+      Automatically push suggested doc changes directly to the PR branch.
+      When 'true', suggestions are applied immediately rather than requiring a
+      /docs-apply comment. Only works for same-repo PRs (not forks).
+    required: false
+    default: 'false'
+
+runs:
+  using: 'node20'
+  main: 'dist/index.js'

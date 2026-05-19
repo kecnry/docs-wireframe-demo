@@ -12,11 +12,11 @@ import { parse as parseYaml } from 'yaml';
 import { discoverWireframeDemos, DiscoveredDemo } from './discover';
 import { readAllArtifacts } from './artifacts';
 import { collectDiff } from './diff';
-import { createLLMClient } from './llm';
+import { createLLMClient } from '../../shared/llm';
 import { analyzeAll } from './analyze';
-import { formatComment, postComment, extractReplacements } from './comment';
+import { formatComment, postComment, extractReplacements, CommentConfig } from '../../shared/comment';
 import { validateDemo, ValidationResult } from './validate';
-import { pushSuggestions } from './suggestions';
+import { pushSuggestions, SuggestionConfig } from '../../shared/suggestions';
 
 interface ExplicitConfig {
   wireframes: Array<{
@@ -199,7 +199,12 @@ async function run(): Promise<void> {
         r.needsUpdate && r.changes?.some(c => c.replacements && c.replacements.length > 0)
       );
       if (hasReplacements) {
-        const suggestionResult = await pushSuggestions(githubToken, results);
+        const suggestionConfig: SuggestionConfig = {
+          branchPrefix: 'wireframe-suggestions',
+          titlePrefix: '🖼️ Wireframe updates',
+          commitPrefix: 'wireframe-review',
+        };
+        const suggestionResult = await pushSuggestions(githubToken, results, suggestionConfig);
         if (suggestionResult.error) {
           core.warning(`Auto-apply failed: ${suggestionResult.error}`);
         } else if (suggestionResult.prUrl) {
@@ -213,8 +218,17 @@ async function run(): Promise<void> {
 
     // ── Post comment ───────────────────────────────────────────────
     const anyUpdates = results.some(r => r.needsUpdate);
-    const commentBody = formatComment(results, validationResults, { autoApplied: !!appliedPrUrl, appliedPrUrl });
-    await postComment(githubToken, commentBody, anyUpdates);
+    const commentConfig: CommentConfig = {
+      commentMarker: '<!-- wireframe-review-bot -->',
+      dataStart: '<!-- wireframe-suggestions-data:',
+      dataEnd: ':wireframe-suggestions-data -->',
+      title: '🖼️ Wireframe Demo Review',
+      validationTitle: 'Step/Selector Validation',
+      applyCommand: '/wireframe-apply',
+      footerText: 'Automated by [docs-wireframe-demo](https://github.com/spacetelescope/docs-wireframe-demo) wireframe review action',
+    };
+    const commentBody = formatComment(results, commentConfig, validationResults, { autoApplied: !!appliedPrUrl, appliedPrUrl });
+    await postComment(githubToken, commentBody, anyUpdates, commentConfig.commentMarker);
 
     core.info('Wireframe review comment posted.');
 
@@ -270,7 +284,13 @@ async function handleApplyCommand(): Promise<void> {
   core.info(`Handling /wireframe-apply for PR #${prNumber}`);
 
   // Extract stored replacements from the bot's earlier review comment
-  const replacements = await extractReplacements(githubToken, prNumber);
+  const replacements = await extractReplacements(
+    githubToken,
+    prNumber,
+    '<!-- wireframe-review-bot -->',
+    '<!-- wireframe-suggestions-data:',
+    ':wireframe-suggestions-data -->'
+  );
 
   if (replacements.length === 0) {
     core.warning('No stored suggestions found in the wireframe review comment.');
@@ -300,9 +320,14 @@ async function handleApplyCommand(): Promise<void> {
     error: null,
   }];
 
-  const result = await pushSuggestions(githubToken, fakeResults);
+  const suggestionConfig: SuggestionConfig = {
+    branchPrefix: 'wireframe-suggestions',
+    titlePrefix: '🖼️ Wireframe updates',
+    commitPrefix: 'wireframe-review',
+  };
+  const result = await pushSuggestions(githubToken, fakeResults, suggestionConfig);
 
-  const octokit = github.getOctokit(githubToken);
+  const octokit = github.getOctokit(token);
   const { owner, repo } = github.context.repo;
 
   if (result.prUrl) {

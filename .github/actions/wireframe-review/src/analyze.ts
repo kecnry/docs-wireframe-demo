@@ -4,7 +4,7 @@
 
 import * as core from '@actions/core';
 import { DemoArtifacts } from './artifacts';
-import { LLMClient } from './llm';
+import { LLMClient } from '../../shared/llm';
 import { buildAnalysisPrompt } from './prompts';
 import { ValidationResult } from './validate';
 
